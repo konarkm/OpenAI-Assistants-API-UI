@@ -86,26 +86,7 @@ if st.button("Confirm Selection"):
         with st.chat_message("user"):
             st.markdown(prompt)
 
-
-        # with client.beta.threads.runs.stream(
-        #     thread_id=thread.id,
-        #     assistant_id=selected_assistant_id,
-        #     instructions="",
-        #     event_handler=EventHandler(),
-        #     ) as stream:
-        #         with st.chat_message("assistant"):
-        #             response = st.write_stream(stream.until_done())
-
-        stream = client.beta.threads.runs.stream(
-            thread_id=thread.id,
-            assistant_id=selected_assistant_id,
-            instructions="",
-            event_handler=EventHandler(),
-            )
-        
-        with st.chat_message("assistant"):
-            response = st.write_stream(stream.until_done())
-
+        # Send user message to assistant
 
 
         st.session_state.messages.append({"role": "assistant", "content": response})
