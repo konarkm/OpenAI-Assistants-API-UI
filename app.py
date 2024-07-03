@@ -36,57 +36,47 @@ selected_assistant = st.selectbox("Select Assistant", list(assistants_list.keys(
 selected_assistant_id = assistants_list.get(selected_assistant)
 
 
-
-class EventHandler(AssistantEventHandler):    
-  @override
-  def on_text_created(self, text) -> None:
-    print(f"\nassistant > ", end="", flush=True)
-      
-  @override
-  def on_text_delta(self, delta, snapshot):
-    print(delta.value, end="", flush=True)
-      
-  def on_tool_call_created(self, tool_call):
-    print(f"\nassistant > {tool_call.type}\n", flush=True)
-  
-  def on_tool_call_delta(self, delta, snapshot):
-    if delta.type == 'code_interpreter':
-      if delta.code_interpreter.input:
-        print(delta.code_interpreter.input, end="", flush=True)
-      if delta.code_interpreter.outputs:
-        print(f"\n\noutput >", flush=True)
-        for output in delta.code_interpreter.outputs:
-          if output.type == "logs":
-            print(f"\n{output.logs}", flush=True)
- 
-
 # Confirm selection
 if st.button("Confirm Selection"):
+    st.session_state["assistant_id"] = selected_assistant_id
 
-    # Create a thread
-    thread = client.beta.threads.create()
+# Create a thread
+thread = client.beta.threads.create()
 
-    if "assistant_id" not in st.session_state:
-        st.session_state["assistant_id"] = selected_assistant_id
-
-    if "messages" not in st.session_state:
-        st.session_state.messages = []
+if "messages" not in st.session_state:
+    st.session_state.messages = []
 
 
-    for message in st.session_state.messages:
-        with st.chat_message(message["role"]):
-            st.markdown(message["content"])
-        
+for message in st.session_state.messages:
+    with st.chat_message(message["role"]):
+        st.markdown(message["content"])
+    
 
 
-    if prompt := st.chat_input("Enter a messsage"):
-        # Add user message to chat history
-        st.session_state.messages.append({"role": "user", "content": prompt})
-        # Display user message in chat message container
-        with st.chat_message("user"):
-            st.markdown(prompt)
+if prompt := st.chat_input("Enter a messsage"):
+    # Add user message to chat history
+    st.session_state.messages.append({"role": "user", "content": prompt})
+    # Display user message in chat message container
+    with st.chat_message("user"):
+        st.markdown(prompt)
+    
+    message = client.beta.threads.messages.create(
+        thread_id=thread.id,
+        role="user",
+        content=prompt
+    )
 
-        # Send user message to assistant
+    run = client.beta.threads.runs.create_and_poll(
+       thread_id=thread.id,
+       assistant_id=st.session_state["assistant_id"],
+       instructions=""
+    )
 
 
-        st.session_state.messages.append({"role": "assistant", "content": response})
+    messages = client.beta.threads.messages.list(
+        thread_id=thread.id
+    )
+    response = messages.data[0].content[0].text.value
+
+
+    st.session_state.messages.append({"role": "assistant", "content": response})
