@@ -57,80 +57,97 @@ vector_store = client.beta.vector_stores.retrieve(
 )
 
 
-# Add a streamlit sidebar
-st.sidebar.title("Files")
 
+def get_files_dict():
+    # Get the list of files in the vector store
+    vector_store_files = client.beta.vector_stores.files.list(
+    vector_store_id=vector_store_id
+    )
+
+    # Create a list of file IDs
+    vector_store_files_list = [file.id for file in vector_store_files.data]
+
+    # This is necessary because currently, the list of vector store files has file IDs and "objects" but not the file names.
+    # Create a dictionary of file names and IDs
+    vector_store_files_dict = {}
+    for file_id in vector_store_files_list:
+        file = client.files.retrieve(file_id)
+        vector_store_files_dict[file.filename] = file.id
+    
+    return vector_store_files_dict
 
 # Display files
-# Get the list of files in the vector store
-vector_store_files = client.beta.vector_stores.files.list(
-  vector_store_id=vector_store_id
-)
-
-# Create a list of file IDs
-vector_store_files_list = [file.id for file in vector_store_files.data]
-
-# This is necessary because currently, the list of vector store files has file IDs and "objects" but not the file names.
-# Create a dictionary of file names and IDs
-vector_store_files_dict = {}
-for file_id in vector_store_files_list:
-    file = client.files.retrieve(file_id)
-    vector_store_files_dict[file.filename] = file.id
-
-
-# Display the list of files in the vector store
-st.sidebar.subheader("Files in Vector Store")
-if not vector_store_files_dict:
-    st.sidebar.markdown("Vector Store is Empty")
-else:
-    for file in vector_store_files_dict:
-        st.sidebar.markdown(f"- {file}")
-
-
+def display_files():
+    # Display the list of files in the vector store
+    st.sidebar.subheader("Files in Vector Store")
+    if not vector_store_files_dict:
+        st.sidebar.markdown("Vector Store is Empty")
+    else:
+        for file in vector_store_files_dict:
+            st.sidebar.markdown(f"- {file}")
 
 
 
 # Upload file menu
-# File selection menu
-file_path = st.sidebar.file_uploader("Upload a file")
-if file_path is not None:
-    # Upload file to OpenAI
-    uploaded_file = client.files.create(
-        file=file_path,
-        purpose="assistants"
-    )
+def upload_file():
+    # File selection menu
+    file_path = st.sidebar.file_uploader("Upload a file")
+    if file_path is not None:
+        # Upload file to OpenAI
+        uploaded_file = client.files.create(
+            file=file_path,
+            purpose="assistants"
+        )
 
-    # Link the uploaded file to the vector store
-    vector_store_file = client.beta.vector_stores.files.create(
-        vector_store_id=vector_store_id,
-        file_id=uploaded_file.id
-    )
+        # Link the uploaded file to the vector store
+        vector_store_file = client.beta.vector_stores.files.create(
+            vector_store_id=vector_store_id,
+            file_id=uploaded_file.id
+        )
 
-    # Display success message
-    st.sidebar.success("File uploaded successfully")
+        # Display success message
+        st.sidebar.success("File uploaded successfully")
 
-
-
-
-
-
-# Select a file to delete
-selected_file = st.sidebar.selectbox("Select File to Delete", list(vector_store_files_dict.keys()))
-file_id_to_delete = vector_store_files_dict.get(selected_file)
-
-# Delete file button
-if st.sidebar.button("Delete File"):
-    if file_id_to_delete:
-        # Delete file from vector store
-        client.beta.vector_stores.files.delete(vector_store_id=vector_store_id, file_id=file_id_to_delete)
-        # Delete file from OpenAI Files
-        client.files.delete(file_id=file_id_to_delete)
-        st.sidebar.success("File deleted successfully")
+        # Refresh the sidebar
         st.rerun()
-    else:
-        st.sidebar.error("No file selected")
 
 
+def delete_file():
+    # Select a file to delete
+    selected_file = st.sidebar.selectbox("Select File to Delete", list(vector_store_files_dict.keys()))
+    file_id_to_delete = vector_store_files_dict.get(selected_file)
+
+    # Delete file button
+    if st.sidebar.button("Delete File"):
+        if file_id_to_delete:
+            # Delete file from vector store
+            client.beta.vector_stores.files.delete(vector_store_id=vector_store_id, file_id=file_id_to_delete)
+            # Delete file from OpenAI Files
+            client.files.delete(file_id=file_id_to_delete)
+            st.sidebar.success("File deleted successfully")
+            st.rerun()
+        else:
+            st.sidebar.error("No file selected")
+
+
+# Add a streamlit sidebar
+st.sidebar.title("Files")
+
+
+
+
+vector_store_files_dict = get_files_dict()
+
+
+display_files()
+
+
+upload_file()
+
+
+
+
+delete_file()
 
 # Chat UI
 # Check if a thread ID already exists in the session state, otherwise create a new thread
