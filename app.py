@@ -91,8 +91,15 @@ def display_files():
 
 # Upload file menu
 def upload_file():
+    if "file_uploader_key" not in st.session_state:
+        st.session_state["file_uploader_key"] = 0
+
     # File selection menu
-    file_path = st.sidebar.file_uploader("Upload a file")
+    file_path = st.sidebar.file_uploader(
+        "Upload a file",
+        accept_multiple_files=False, # Not accepting multiple files for now. Support can be added with a for loop and some logic in the duplicate file check.  
+        key=st.session_state["file_uploader_key"]
+    )
 
     if file_path is not None:
         # Check if the file already exists in the vector store
@@ -113,6 +120,9 @@ def upload_file():
 
             # Display success message
             st.sidebar.success("File uploaded successfully")
+            # Increment the file uploader key to refresh the file uploader
+            st.session_state["file_uploader_key"] += 1
+            st.rerun()
 
 
 def delete_file():
