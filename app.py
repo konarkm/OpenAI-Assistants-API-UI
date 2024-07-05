@@ -25,7 +25,21 @@ def get_client():
 
     return client
 
+def initialize_assistant(client):
+    
+    vector_store = client.beta.vector_stores.create(
+    name="Default Assistants Vector Store"
+    )
 
+    my_assistant = client.beta.assistants.create(
+        instructions="You are a helpful assistant.",
+        name="Default Assistant",
+        tools=[{"type": "file_search"}],
+        tool_resources={"file_search": {"vector_store_ids": [vector_store.id]}},
+        model="gpt-4o",
+    )
+
+    return
 
 def select_assistant(client):
     # List all assistants from your account
@@ -33,6 +47,13 @@ def select_assistant(client):
         order="desc",
         limit="20",
     )
+
+    if all_assistants.data == []:
+        st.error("No assistants found in your OpenAI account. Creating a default assistant and reloading in 5 seconds.")
+        initialize_assistant(client)
+        time.sleep(5)
+        st.rerun()
+
     # Create a dictionary of assistant names and IDs
     assistants_dict = {}
     for assistant in all_assistants.data:
