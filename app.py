@@ -40,7 +40,99 @@ selected_assistant_id = assistants_dict.get(selected_assistant)
 # Save the selected assistant ID to the session state
 st.session_state["assistant_id"] = selected_assistant_id
 
+# The assistant's vector store ID can be retrieved when creating the assistants_dict, but is being done here for code readability.
+# Retrieve the selected assistant's information
+selected_assistant_info = client.beta.assistants.retrieve(st.session_state["assistant_id"])
 
+# Get the selected assistant's vector store ID
+try:
+    vector_store_id = selected_assistant_info.tool_resources.file_search.vector_store_ids[0]
+except:
+    st.error("Error retrieving the selected assistant's vector store ID. This can happen if the assistant does not have a vector store.")
+    st.stop()
+    
+
+vector_store = client.beta.vector_stores.retrieve(
+  vector_store_id=vector_store_id
+)
+
+
+# Add a streamlit sidebar
+st.sidebar.title("Files")
+
+
+# Display files
+# Get the list of files in the vector store
+vector_store_files = client.beta.vector_stores.files.list(
+  vector_store_id=vector_store_id
+)
+
+# Create a list of file IDs
+vector_store_files_list = [file.id for file in vector_store_files.data]
+
+# This is necessary because currently, the list of vector store files has file IDs and "objects" but not the file names.
+# Create a dictionary of file names and IDs
+vector_store_files_dict = {}
+for file_id in vector_store_files_list:
+    file = client.files.retrieve(file_id)
+    vector_store_files_dict[file.filename] = file.id
+
+
+# Display the list of files in the vector store
+st.sidebar.subheader("Files in Vector Store")
+if not vector_store_files_dict:
+    st.sidebar.markdown("Vector Store is Empty")
+else:
+    for file in vector_store_files_dict:
+        st.sidebar.markdown(f"- {file}")
+
+
+
+
+
+# Upload file menu
+# File selection menu
+file_path = st.sidebar.file_uploader("Upload a file")
+if file_path is not None:
+    # Upload file to OpenAI
+    uploaded_file = client.files.create(
+        file=file_path,
+        purpose="assistants"
+    )
+
+    # Link the uploaded file to the vector store
+    vector_store_file = client.beta.vector_stores.files.create(
+        vector_store_id=vector_store_id,
+        file_id=uploaded_file.id
+    )
+
+    # Display success message
+    st.sidebar.success("File uploaded successfully")
+
+
+
+
+
+
+# Select a file to delete
+selected_file = st.sidebar.selectbox("Select File to Delete", list(vector_store_files_dict.keys()))
+file_id_to_delete = vector_store_files_dict.get(selected_file)
+
+# Delete file button
+if st.sidebar.button("Delete File"):
+    if file_id_to_delete:
+        # Delete file from vector store
+        client.beta.vector_stores.files.delete(vector_store_id=vector_store_id, file_id=file_id_to_delete)
+        # Delete file from OpenAI Files
+        client.files.delete(file_id=file_id_to_delete)
+        st.sidebar.success("File deleted successfully")
+        st.rerun()
+    else:
+        st.sidebar.error("No file selected")
+
+
+
+# Chat UI
 # Check if a thread ID already exists in the session state, otherwise create a new thread
 if "thread_id" not in st.session_state:
     thread = client.beta.threads.create()
