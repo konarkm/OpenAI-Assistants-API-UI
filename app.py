@@ -93,21 +93,26 @@ def display_files():
 def upload_file():
     # File selection menu
     file_path = st.sidebar.file_uploader("Upload a file")
+
     if file_path is not None:
-        # Upload file to OpenAI
-        uploaded_file = client.files.create(
-            file=file_path,
-            purpose="assistants"
-        )
+        # Check if the file already exists in the vector store
+        if file_path.name in vector_store_files_dict:
+            st.sidebar.error("File already exists in the vector store")
+        else:
+            # Upload file to OpenAI
+            uploaded_file = client.files.create(
+                file=file_path,
+                purpose="assistants"
+            )
 
-        # Link the uploaded file to the vector store
-        vector_store_file = client.beta.vector_stores.files.create(
-            vector_store_id=vector_store_id,
-            file_id=uploaded_file.id
-        )
+            # Link the uploaded file to the vector store
+            vector_store_file = client.beta.vector_stores.files.create(
+                vector_store_id=vector_store_id,
+                file_id=uploaded_file.id
+            )
 
-        # Display success message
-        st.sidebar.success("File uploaded successfully")
+            # Display success message
+            st.sidebar.success("File uploaded successfully")
 
 
 def delete_file():
