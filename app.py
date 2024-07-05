@@ -3,6 +3,7 @@ import os
 from dotenv import load_dotenv
 import streamlit as st
 import openai
+import time
 
 st.title("OpenAI Assistants API UI")
 
@@ -120,6 +121,8 @@ def upload_file():
 
             # Display success message
             st.sidebar.success("File uploaded successfully")
+            time.sleep(1)
+
             # Increment the file uploader key to refresh the file uploader
             st.session_state["file_uploader_key"] += 1
             st.rerun()
@@ -138,6 +141,8 @@ def delete_file():
             # Delete file from OpenAI Files
             client.files.delete(file_id=file_id_to_delete)
             st.sidebar.success("File deleted successfully")
+            # Wait added to allow for OpenAI to process the deletion (before the code reruns and the file list is retrieved again)
+            time.sleep(2)
             st.rerun()
         else:
             st.sidebar.error("No file selected")
