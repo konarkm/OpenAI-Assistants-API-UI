@@ -256,7 +256,7 @@ def chat(client, thread):
 def main():
     
     # Set the title of the streamlit app
-    st.title("OpenAI Assistants API UI")
+    st.title("Assistants UI")
     # Add a streamlit sidebar
     st.sidebar.title("Files")
 
