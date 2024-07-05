@@ -44,6 +44,13 @@ def select_assistant(client):
     # Get the selected assistant ID
     selected_assistant_id = assistants_dict.get(selected_assistant)
 
+    old_assistant_id = st.session_state.get("assistant_id")
+
+    if old_assistant_id != selected_assistant_id:
+        # Clear the session state if the assistant is changed
+        for key in st.session_state.keys():
+            del st.session_state[key]
+
     # Save the selected assistant ID to the session state
     st.session_state["assistant_id"] = selected_assistant_id
 
