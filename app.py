@@ -108,9 +108,6 @@ def upload_file():
         # Display success message
         st.sidebar.success("File uploaded successfully")
 
-        # Refresh the sidebar
-        st.rerun()
-
 
 def delete_file():
     # Select a file to delete
