@@ -83,6 +83,7 @@ def display_files():
     if not vector_store_files_dict:
         st.sidebar.markdown("Vector Store is Empty")
     else:
+        st.sidebar.markdown(f"Total Files: {len(vector_store_files_dict)}")
         for file in vector_store_files_dict:
             st.sidebar.markdown(f"- {file}")
 
