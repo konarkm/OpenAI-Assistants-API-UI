@@ -142,20 +142,20 @@ def upload_file(client, vector_store_files_dict, vector_store_id):
         st.session_state["file_uploader_key"] = 0
 
     # File selection menu
-    file_path = st.sidebar.file_uploader(
+    file = st.sidebar.file_uploader(
         "Upload a file",
         accept_multiple_files=False, # Not accepting multiple files for now. Support can be added with a for loop and some logic in the duplicate file check.  
         key=st.session_state["file_uploader_key"]
     )
 
-    if file_path is not None:
+    if file is not None:
         # Check if the file already exists in the vector store
-        if file_path.name in vector_store_files_dict:
+        if file.name in vector_store_files_dict:
             st.sidebar.error("File already exists in the vector store")
         else:
             # Upload file to OpenAI
             uploaded_file = client.files.create(
-                file=file_path,
+                file=file,
                 purpose="assistants"
             )
 
@@ -178,16 +178,16 @@ def upload_image(client, thread):
         st.session_state["image_uploader_key"] = 1000
 
     # Image selection menu
-    image_path = st.file_uploader(
+    image = st.file_uploader(
         "Upload an image",
         accept_multiple_files=False, # Not accepting multiple images for now. Support can be added with a for loop and some logic in the duplicate image check.  
         key=st.session_state["image_uploader_key"]
     )
 
-    if image_path is not None:
+    if image is not None:
         # Upload image to OpenAI
         uploaded_image = client.files.create(
-            file=image_path,
+            file=image,
             purpose="vision"
         )
 
