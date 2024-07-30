@@ -207,7 +207,7 @@ def upload_image(client, thread):
         )
 
         # Display success message
-        st.sidebar.success("Image uploaded successfully")
+        st.success("Image uploaded successfully")
         time.sleep(1)
 
         # Increment the image uploader key to refresh the image uploader
