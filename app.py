@@ -173,6 +173,50 @@ def upload_file(client, vector_store_files_dict, vector_store_id):
             st.session_state["file_uploader_key"] += 1
             st.rerun()
 
+def upload_image(client, thread):
+    if "image_uploader_key" not in st.session_state:
+        st.session_state["image_uploader_key"] = 1000
+
+    # Image selection menu
+    image_path = st.file_uploader(
+        "Upload an image",
+        accept_multiple_files=False, # Not accepting multiple images for now. Support can be added with a for loop and some logic in the duplicate image check.  
+        key=st.session_state["image_uploader_key"]
+    )
+
+    if image_path is not None:
+        # Upload image to OpenAI
+        uploaded_image = client.files.create(
+            file=image_path,
+            purpose="vision"
+        )
+
+        # Send user message to assistant
+        message = client.beta.threads.messages.create(
+            thread_id=thread.id,
+            role="user",
+            content=[
+                {
+                    "type": "image_file",
+                    "image_file": {
+                        "file_id": uploaded_image.id,
+                        "detail": "high"
+                        }
+                }
+            ]
+        )
+
+        # Display success message
+        st.sidebar.success("Image uploaded successfully")
+        time.sleep(1)
+
+        # Increment the image uploader key to refresh the image uploader
+        st.session_state["image_uploader_key"] += 1
+
+        st.session_state.messages.append({"role": "user", "content": "Image: " + uploaded_image.filename})
+
+        st.rerun()
+
 
 def delete_file(client, vector_store_files_dict, vector_store_id):
     # Select a file to delete
@@ -277,6 +321,8 @@ def main():
     delete_file(client, vector_store_files_dict, vector_store_id)
 
     thread = get_thread(client)
+
+    upload_image(client, thread)
 
     display_messages()
 
