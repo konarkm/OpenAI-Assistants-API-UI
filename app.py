@@ -60,7 +60,7 @@ def select_assistant(client):
         assistants_dict[assistant.name] = assistant.id
 
     # Select an assistant
-    selected_assistant = st.selectbox("Select Assistant", list(assistants_dict.keys()), index=0)
+    selected_assistant = st.sidebar.selectbox("Select Assistant", list(assistants_dict.keys()), index=0)
 
     # Get the selected assistant ID
     selected_assistant_id = assistants_dict.get(selected_assistant)
@@ -126,13 +126,14 @@ def get_files_dict(client, vector_store_id):
 # Display files
 def display_files(vector_store_files_dict):
     # Display the list of files in the vector store
-    st.sidebar.subheader("Files in Vector Store")
+    st.sidebar.subheader("Files in Vector Store:")
     if not vector_store_files_dict:
         st.sidebar.markdown("Vector Store is Empty")
     else:
-        st.sidebar.markdown(f"Total Files: {len(vector_store_files_dict)}")
+        container = st.sidebar.container(border=True)
         for file in vector_store_files_dict:
-            st.sidebar.markdown(f"- {file}")
+            container.write(f"- {file}")
+        st.sidebar.markdown(f"Total Files: {len(vector_store_files_dict)}")
 
 
 # Upload file menu
@@ -257,11 +258,13 @@ def main():
     
     # Set the title of the streamlit app
     st.title("Assistants UI")
-    # Add a streamlit sidebar
-    st.sidebar.title("Files")
 
     client = get_client()
+
+    st.sidebar.title("Assistant")
     select_assistant(client)
+
+    st.sidebar.title("Files")
 
     vector_store_id = get_vector_store_id(client)
 
